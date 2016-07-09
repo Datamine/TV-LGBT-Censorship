@@ -158,7 +158,6 @@ def main():
         with open(directory_name + "/" + year, "w") as f:
             worddict = dict(getwords(url))
             # write two things to the file: a dictionary representing a word
-            # frequency count, and the total frequency
             f.write(str(worddict)+'\n'+str(sum(worddict.values())))
 
 if __name__=='__main__':
