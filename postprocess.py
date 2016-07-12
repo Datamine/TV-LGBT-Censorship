@@ -253,7 +253,7 @@ for year in files:
             # need a temp variable store
             not_alphanumeric = dict((x,y) for x,y in word_frequencies.items() if not is_alphanumeric(x))
  
-           # convert all non-alphanumeric words to alphanumeric
+            # convert all non-alphanumeric words to alphanumeric
             for word in not_alphanumeric:
                 del word_frequencies[word]
                 replaced = filter(lambda x: x!='', replace(word).split(" "))
@@ -263,22 +263,26 @@ for year in files:
                     else:
                         word_frequencies[fixed_word] = not_alphanumeric[word]
 
+            # remove hyphens (again) and remove garbled words leftover from that
+            for old_word in word_frequencies.keys():
+                if not is_alphanumeric(old_word):
+                    new_words = filter(lambda x: x!='', old_word.replace("-", " ").split(" "))
+                    for new_word in new_words:                    
+                        if is_alphanumeric(new_word):
+                            if new_word in word_frequencies:
+                                word_frequencies[new_word] += word_frequencies[old_word]
+                            else:
+                                word_frequencies[new_word] = word_frequencies[old_word]
+                    del word_frequencies[old_word]
+
             # loop over the word_frequencies, lemmatize all the verbs and plurals
-            nope = []
             for word in word_frequencies.keys():
-                try:
-                    lemmatized = lemmatizer.lemmatize(word,"v")
-                except:
-                    nope.append(word)
+                lemmatized = lemmatizer.lemmatize(word,"v")
                 if lemmatized != word:
                     if lemmatized in word_frequencies:
                         word_frequencies[lemmatized] += word_frequencies[word]
                     else:
                         word_frequencies[lemmatized] = word_frequencies[word]
                     del word_frequencies[word]
-    
-            nope2 = [x for x in word_frequencies.keys() if not is_alphanumeric(x)]
-
-            print nope2
 
         g.write(str(word_frequencies))

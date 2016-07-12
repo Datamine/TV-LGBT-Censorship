@@ -71,7 +71,7 @@ def parselink(url):
                 # remove punctuation
                 snip = snip.translate(None, ',.!?\'"()\n;$:[]{}')
                 # remove hyphenation. this is a controversial decision.
-                snip = snip.translate(" ", "-")
+                snip = snip.replace("-", " ")
 
                 #split up the line into individual words
                 snip = snip.split(" ")
