@@ -20,16 +20,17 @@ def parselink(url):
     # this is very inefficient, but works quickly enough.
     html = urllib2.urlopen(url).read()
     soup = BeautifulSoup(html,"html5lib")
-    soup = soup.findAll("td", class_="description")
-    for x in soup:
-        for match in x.findAll('a'):
+    cells = soup.findAll("td", class_="description")
+    for cell in cells:
+        for match in cell.findAll('a'):
             match.unwrap()
-        for match in x.findAll('p'):
+        for match in cell.findAll('p'):
             match.unwrap()
-        # split the soup up into individual lines
-        z = str(x).lower().split('\n')
-        for snip in z:
-            # remove formatting
+        # split the cell up into individual lines
+        lines = str(cell).lower().split('\n')
+        for snip in lines:
+            # remove formatting. catching a few edge cases. there's a bit of
+            # heterogeneity in cell formatting (it's wikipedia, after all).
             if "united states</td>" in snip or "<small>" in snip:
                 continue
             elif "<b>" in snip and ":" in snip:
@@ -43,6 +44,7 @@ def parselink(url):
                               snip[snip.index("</span>")+7:]
                     # in certain badly-formatted cases, the above doesn't work.
                     if len(newsnip)>=len(snip):
+                        print "this happened"
                         break
                     else:
                         snip = newsnip
@@ -50,6 +52,7 @@ def parselink(url):
                     newsnip = snip[:snip.index("<sup")] + \
                               snip[snip.index("</sup>")+6:]
                     if len(newsnip)>=len(snip):
+                        print "2this happened"
                         break
                     else:
                         snip = newsnip
@@ -66,14 +69,12 @@ def parselink(url):
                 snip = snip.replace("<li>","")
                 snip = snip.replace("</li>","")
                 if "<" in snip or ">" in snip:
-                    # for debugging
-                    #print snip
                     continue
+                # remove punctuation
+                snip = snip.translate(None, ',.!?\'"()\n;$:[]{}')
                 #split up the line into individual words
                 snip = snip.split(" ")
                 for y in snip:
-                    # remove punctuation
-                    w = y.translate(None, ',.!?\'"()\n;$:[]{}')
                     if w in stopwords:
                         continue   
                     if w in allwords:
@@ -88,7 +89,7 @@ def parselink(url):
     for word in allwords.keys():
         if '\\' in word or '<' in word or '>' in word or '/' in word:
             del allwords[word]
-    return allwords
+    return {}
 
 def getwords(url):
     """
@@ -115,7 +116,6 @@ def getwords(url):
     for season in collectedlinks:
         season_counter = Counter(parselink(season))
         allwords += season_counter
-    printdict(allwords)
     return allwords
     
 def main():
@@ -151,7 +151,7 @@ def main():
         os.makedirs(directory_name)
 
     # process each year / url
-    for index, url in enumerate(urls[:1]):
+    for index, url in enumerate(urls):
         year = str(index + 1950)        
         # print the year to indicate progress
         print year
