@@ -2,3 +2,4 @@ venv/
 *.swp
 *.swo
 year_wordcounts/
+processed_year_wordcounts/

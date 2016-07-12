@@ -5,11 +5,6 @@ from collections import Counter
 import os
 import urllib2
 
-import pprint
-def printdict(d):
-    pp = pprint.PrettyPrinter(indent=4)
-    pp.pprint(d)
-
 def parselink(url):
     """
     url: link to a season of a television show. finds the list of episodes therein,
@@ -17,7 +12,7 @@ def parselink(url):
     """
     allwords = {}
     global stopwords
-    # this is very inefficient, but works quickly enough.
+    # this is very inefficient/hacky, but works quickly enough.
     html = urllib2.urlopen(url).read()
     soup = BeautifulSoup(html,"html5lib")
     cells = soup.findAll("td", class_="description")
@@ -26,6 +21,7 @@ def parselink(url):
             match.unwrap()
         for match in cell.findAll('p'):
             match.unwrap()
+
         # split the cell up into individual lines
         lines = str(cell).lower().split('\n')
         for snip in lines:
@@ -44,7 +40,7 @@ def parselink(url):
                               snip[snip.index("</span>")+7:]
                     # in certain badly-formatted cases, the above doesn't work.
                     if len(newsnip)>=len(snip):
-                        print "this happened"
+                        # this happens extremely rarely.
                         break
                     else:
                         snip = newsnip
@@ -52,10 +48,11 @@ def parselink(url):
                     newsnip = snip[:snip.index("<sup")] + \
                               snip[snip.index("</sup>")+6:]
                     if len(newsnip)>=len(snip):
-                        print "2this happened"
+                        # this happens extremely rarely.
                         break
                     else:
                         snip = newsnip
+
                 snip = snip.replace("</td>","")
                 snip = snip.replace("<i>","")
                 snip = snip.replace("</i>","")
@@ -70,24 +67,27 @@ def parselink(url):
                 snip = snip.replace("</li>","")
                 if "<" in snip or ">" in snip:
                     continue
+
                 # remove punctuation
                 snip = snip.translate(None, ',.!?\'"()\n;$:[]{}')
+                # remove hyphenation. this is a controversial decision.
+                snip = snip.translate(" ", "-")
+
                 #split up the line into individual words
                 snip = snip.split(" ")
                 for y in snip:
-                    if y=='':
+                    if y=='' or y in stopwords:
                         continue
-                    if w in stopwords:
-                        continue   
-                    if w in allwords:
-                        allwords[w] += 1
+                    if y in allwords:
+                        allwords[y] += 1
                     else:
-                        allwords[w] = 1
-        # remove nonwords or garbled words
+                        allwords[y] = 1
+
+    # remove nonwords or garbled words
     for word in allwords.keys():
         if '\\' in word or '<' in word or '>' in word or '/' in word:
             del allwords[word]
-    return {}
+    return allwords
 
 def getwords(url):
     """
