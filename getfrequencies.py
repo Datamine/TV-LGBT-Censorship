@@ -75,17 +75,15 @@ def parselink(url):
                 #split up the line into individual words
                 snip = snip.split(" ")
                 for y in snip:
+                    if y=='':
+                        continue
                     if w in stopwords:
                         continue   
                     if w in allwords:
                         allwords[w] += 1
                     else:
                         allwords[w] = 1
-    if '' in allwords:
-        del allwords['']
-    if ' ' in allwords:
-        del allwords[' ']
-    # remove nonwords or garbled words
+        # remove nonwords or garbled words
     for word in allwords.keys():
         if '\\' in word or '<' in word or '>' in word or '/' in word:
             del allwords[word]
