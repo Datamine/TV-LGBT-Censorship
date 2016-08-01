@@ -1,5 +1,6 @@
 venv/
 *.swp
 *.swo
+*.pyc
 year_wordcounts/
 processed_year_wordcounts/
